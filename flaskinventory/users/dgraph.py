@@ -76,6 +76,38 @@ class User(UserMixin):
             algorithm="HS256"
         )
         return reset_token
+    
+    def user_follow(self, follow_uid): # A primitive implementation, might be changed later
+        user_id = validate_uid(self.uid)
+        follow_uid = validate_uid(follow_uid)
+        if user_id and follow_uid:
+            query = f"""{{
+                        u as var(func: uid({user_id}))
+                        v as var(func: uid({follow_uid}))
+                }}"""
+            nquad = f"""{{
+                        uid(u) <follows> uid(v） .
+                }}"""
+            response = dgraph.upsert(query=query, set_nquads=nquad)
+            if response:
+                return response
+        return False
+
+    def user_unfollow(self, unfollow_uid): # A primitive implementation, might be changed later
+        user_id = validate_uid(self.uid)
+        unfollow_uid = validate_uid(unfollow_uid)
+        if user_id and unfollow_uid:
+            query = f"""{{
+                        u as var(func: uid({user_id}))
+                        v as var(func: uid({unfollow_uid}))
+                }}"""
+            nquad = f"""{{
+                        uid(u) <follows> uid(v） .
+                }}"""
+            response = dgraph.upsert(query=query, del_nquads=nquad)
+            if response:
+                return response
+        return False
 
     @staticmethod
     def verify_reset_token(token):
